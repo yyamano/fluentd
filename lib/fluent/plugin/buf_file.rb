@@ -112,7 +112,7 @@ module Fluent
     end
 
     def start
-      FileUtils.mkdir_p File.dirname(@buffer_path_prefix+"path")
+      FileUtils.mkdir_p(File.dirname(@buffer_path_prefix+"path"), :mode => DEFAULT_DIRECTORY_PERMISSION) 
       super
     end
 

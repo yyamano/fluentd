@@ -132,6 +132,16 @@ end
 class UnixInputTest < Test::Unit::TestCase
   include StreamInputTest
 
+  def setup
+    Fluent::Test.setup
+    FileUtils.rm_rf(TMP_DIR)
+    @umask = File.umask(0)
+  end
+
+  def teardown
+    File.umask(@umask)
+  end
+
   TMP_DIR = File.dirname(__FILE__) + "/../tmp/in_unix#{ENV['TEST_ENV_NUMBER']}"
   CONFIG = %[
     path #{TMP_DIR}/unix
@@ -146,6 +156,14 @@ class UnixInputTest < Test::Unit::TestCase
     d = create_driver
     assert_equal "#{TMP_DIR}/unix", d.instance.path
     assert_equal 1000, d.instance.backlog
+  end
+
+  def test_permission
+    d = create_driver
+    d.run
+
+puts "XXXXXXXXXXXXXXXXXXXXXXXX"
+    assert_equal Fluent::DEFAULT_DIRECTORY_PERMISSION, File::Stat.new(TMP_DIR).mode & 0777
   end
 
   def connect

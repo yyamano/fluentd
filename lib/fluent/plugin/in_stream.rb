@@ -203,7 +203,7 @@ module Fluent
       if File.exist?(@path)
         File.unlink(@path)
       end
-      FileUtils.mkdir_p File.dirname(@path)
+      FileUtils.mkdir_p(File.dirname(@path), :mode => DEFAULT_DIRECTORY_PERMISSION)
       log.debug "listening fluent socket on #{@path}"
       s = Coolio::UNIXServer.new(@path, Handler, log, method(:on_message))
       s.listen(@backlog) unless @backlog.nil?

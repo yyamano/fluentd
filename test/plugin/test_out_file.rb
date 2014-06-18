@@ -6,7 +6,11 @@ class FileOutputTest < Test::Unit::TestCase
   def setup
     Fluent::Test.setup
     FileUtils.rm_rf(TMP_DIR)
-    FileUtils.mkdir_p(TMP_DIR)
+    @umask = File.umask(0)
+  end
+
+  def teardown
+    File.umask(@umask)
   end
 
   TMP_DIR = File.expand_path(File.dirname(__FILE__) + "/../tmp/out_file#{ENV['TEST_ENV_NUMBER']}")
@@ -62,6 +66,11 @@ class FileOutputTest < Test::Unit::TestCase
     assert_equal expect, result
   end
 
+  def check_permission(path)
+    assert_equal Fluent::DEFAULT_FILE_PERMISSION, File::Stat.new(path).mode & 0777
+    assert_equal Fluent::DEFAULT_DIRECTORY_PERMISSION, File::Stat.new(File.dirname(path)).mode & 0777
+  end
+
   def test_write
     d = create_driver
 
@@ -87,6 +96,7 @@ class FileOutputTest < Test::Unit::TestCase
     # FileOutput#write returns path
     path = d.run
     check_gzipped_result(path, %[#{Yajl.dump({"a" => 1, 'time' => time})}\n] + %[#{Yajl.dump({"a" => 2, 'time' => time})}\n])
+    check_permission(path)
   end
 
   def test_write_with_format_ltsv
@@ -99,6 +109,7 @@ class FileOutputTest < Test::Unit::TestCase
     # FileOutput#write returns path
     path = d.run
     check_gzipped_result(path, %[a:1\ttime:2011-01-02T13:14:15Z\n] + %[a:2\ttime:2011-01-02T13:14:15Z\n])
+    check_permission(path)
   end
 
   def test_write_with_format_single_value
@@ -111,6 +122,7 @@ class FileOutputTest < Test::Unit::TestCase
     # FileOutput#write returns path
     path = d.run
     check_gzipped_result(path, %[1\n] + %[2\n])
+    check_permission(path)
   end
 
   def test_write_path_increment
@@ -125,12 +137,15 @@ class FileOutputTest < Test::Unit::TestCase
     path = d.run
     assert_equal "#{TMP_DIR}/out_file_test._0.log.gz", path
     check_gzipped_result(path, formatted_lines)
+    check_permission(path)
     path = d.run
     assert_equal "#{TMP_DIR}/out_file_test._1.log.gz", path
     check_gzipped_result(path, formatted_lines)
+    check_permission(path)
     path = d.run
     assert_equal "#{TMP_DIR}/out_file_test._2.log.gz", path
     check_gzipped_result(path, formatted_lines)
+    check_permission(path)
   end
 
   def test_write_with_append
@@ -150,12 +165,15 @@ class FileOutputTest < Test::Unit::TestCase
     path = d.run
     assert_equal "#{TMP_DIR}/out_file_test..log.gz", path
     check_gzipped_result(path, formatted_lines)
+    check_permission(path)
     path = d.run
     assert_equal "#{TMP_DIR}/out_file_test..log.gz", path
     check_gzipped_result(path, formatted_lines * 2)
+    check_permission(path)
     path = d.run
     assert_equal "#{TMP_DIR}/out_file_test..log.gz", path
     check_gzipped_result(path, formatted_lines * 3)
+    check_permission(path)
   end
 
   def test_write_with_symlink
