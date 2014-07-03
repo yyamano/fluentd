@@ -183,7 +183,7 @@ module Fluent
         end
 
         if data.bytesize > @buffer_chunk_limit
-          $log.warn "Size of the emitted data exceeds buffer_chunk_limit."
+          $log.warn "Size of the emitted data (#{data.bytesize}) exceeds buffer_chunk_limit (#{@buffer_chunk_limit})."
           $log.warn "This may occur problems in the output plugins ``at this server.``"
           $log.warn "To avoid problems, set a smaller number to the buffer_chunk_limit"
           $log.warn "in the forward output ``at the log forwarding server.``"
